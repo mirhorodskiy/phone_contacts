@@ -1,13 +1,15 @@
 package com.pet.phone_contacts.web.service.impl;
 
 import com.pet.phone_contacts.web.dto.ContactDto;
+import com.pet.phone_contacts.web.service.ContactExportService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class ContactExportService {
+public class ContactExportServiceImpl implements ContactExportService {
 
+    @Override
     public String generateCsvData(List<ContactDto> contacts) {
         StringBuilder csvData = new StringBuilder();
 

@@ -2,8 +2,11 @@ package com.pet.phone_contacts.web.controller;
 
 import com.pet.phone_contacts.domain.model.entity.Contact;
 import com.pet.phone_contacts.web.dto.ContactDto;
+import com.pet.phone_contacts.web.service.ContactExportService;
+import com.pet.phone_contacts.web.service.ContactImportService;
 import com.pet.phone_contacts.web.service.ContactService;
-import com.pet.phone_contacts.web.service.impl.ContactExportService;
+import com.pet.phone_contacts.web.service.impl.ContactExportServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,10 +23,13 @@ public class ContactController {
 
     private final ContactService contactService;
     private final ContactExportService exportService;
+    private final ContactImportService contactImportService;
 
-    public ContactController(ContactService contactService, ContactExportService exportService) {
+    @Autowired
+    public ContactController(ContactService contactService, ContactExportServiceImpl exportService, ContactExportService exportService1, ContactImportService contactImportService) {
         this.contactService = contactService;
-        this.exportService = exportService;
+        this.exportService = exportService1;
+        this.contactImportService = contactImportService;
     }
 
     @PostMapping
@@ -76,5 +82,11 @@ public class ContactController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=contacts_export.csv")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(fileContent);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Void> importContacts(@RequestParam("file") MultipartFile file) {
+        contactImportService.importContactsFromFile(file);
+        return ResponseEntity.ok().build();
     }
 }

@@ -4,6 +4,7 @@ import com.pet.phone_contacts.domain.model.entity.Contact;
 import com.pet.phone_contacts.domain.model.entity.Email;
 import com.pet.phone_contacts.domain.model.entity.PhoneNumber;
 import com.pet.phone_contacts.domain.model.entity.User;
+import com.pet.phone_contacts.domain.model.error.FileProcessingException;
 import com.pet.phone_contacts.domain.repository.ContactRepository;
 import com.pet.phone_contacts.domain.repository.EmailRepository;
 import com.pet.phone_contacts.domain.repository.PhoneNumberRepository;
@@ -15,7 +16,9 @@ import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,34 +70,50 @@ public class ContactServiceImpl implements ContactService {
         return response;
     }
 
+
     @Override
     public Contact createContact(ContactDto contactDto) {
+        Contact contact = buildContact(contactDto);
+        saveContact(contact, contactDto);
 
-        Contact contact = Contact.builder()
+        return contact;
+    }
+
+    private Contact buildContact(ContactDto contactDto) {
+        return Contact.builder()
                 .name(contactDto.getName())
                 .user(getUserFromSecurityContextHolder())
                 .build();
+    }
 
-        List<Email> emails = contactDto.getEmails().stream()
-                .map(email -> Email.builder()
-                        .email(email)
-                        .contact(contact).build())
-                .collect(Collectors.toList());
+    private void saveContact(Contact contact, ContactDto contactDto) {
+        List<Email> emails = buildEmails(contactDto.getEmails(), contact);
+        List<PhoneNumber> phoneNumbers = buildPhoneNumbers(contactDto.getPhones(), contact);
+
         contact.setEmails(emails);
-
-        List<PhoneNumber> phoneNumbers = contactDto.getPhones().stream()
-                .map(phone -> PhoneNumber.builder()
-                        .phoneNumber(phone)
-                        .contact(contact).build())
-                .collect(Collectors.toList());
         contact.setPhones(phoneNumbers);
 
-        Contact savedContact = contactRepository.save(contact);
-
+        contactRepository.save(contact);
         emailRepository.saveAll(emails);
         phoneNumberRepository.saveAll(phoneNumbers);
+    }
 
-        return savedContact;
+    private List<Email> buildEmails(List<String> emails, Contact contact) {
+        return emails.stream()
+                .map(email -> Email.builder()
+                        .email(email)
+                        .contact(contact)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<PhoneNumber> buildPhoneNumbers(List<String> phoneNumbers, Contact contact) {
+        return phoneNumbers.stream()
+                .map(phone -> PhoneNumber.builder()
+                        .phoneNumber(phone)
+                        .contact(contact)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -170,5 +189,29 @@ public class ContactServiceImpl implements ContactService {
         validateContactOwnership(existingContact);
 
         contactRepository.delete(existingContact);
+    }
+
+    @Override
+    public void uploadContactImage(Long contactId, MultipartFile image) {
+        Contact existingContact = contactRepository.findById(contactId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact doesn't exist"));
+        validateContactOwnership(existingContact);
+        try {
+
+            byte[] imageData = image.getBytes();
+            existingContact.setImage(imageData);
+
+            contactRepository.save(existingContact);
+        } catch (IOException e) {
+            throw new FileProcessingException("Failed to process contact photo", e);
+        }
+    }
+
+    @Override
+    public byte[] getContactImage(Long contactId) {
+        Contact existingContact = contactRepository.findById(contactId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact doesn't exist"));
+
+        return existingContact.getImage();
     }
 }

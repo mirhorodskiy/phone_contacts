@@ -56,6 +56,7 @@
             <scope>test</scope>
             <version>2.5.4</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
@@ -67,6 +68,7 @@
             <artifactId>jjwt</artifactId>
             <version>0.9.1</version>
         </dependency>
+
     </dependencies>
 
     <build>

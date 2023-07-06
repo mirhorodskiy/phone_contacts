@@ -28,6 +28,9 @@ public class Contact {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column
+    private byte[] image;
+
     @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Email> emails;
 

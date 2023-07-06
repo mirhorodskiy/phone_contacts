@@ -11,6 +11,7 @@ import com.pet.phone_contacts.domain.repository.UserRepository;
 import com.pet.phone_contacts.web.dto.ContactDto;
 import com.pet.phone_contacts.web.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class ContactServiceImpl implements ContactService {
         this.emailRepository = emailRepository;
         this.phoneNumberRepository = phoneNumberRepository;
     }
-    
+
     private User getUserFromSecurityContextHolder() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -94,5 +95,80 @@ public class ContactServiceImpl implements ContactService {
         phoneNumberRepository.saveAll(phoneNumbers);
 
         return savedContact;
+    }
+
+    @Override
+    public Contact editContact(ContactDto contactDto, Long contactId) {
+        Contact existingContact = getExistingContactById(contactId);
+        validateContactOwnership(existingContact);
+
+        updateContactName(existingContact, contactDto.getName());
+        updateContactEmails(existingContact, contactDto.getEmails());
+        updateContactPhoneNumbers(existingContact, contactDto.getPhones());
+
+        return contactRepository.save(existingContact);
+    }
+
+    private Contact getExistingContactById(Long contactId) {
+        return contactRepository.findById(contactId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact doesn't exist"));
+    }
+
+    private void validateContactOwnership(Contact contact) {
+        if (!contact.getUser().equals(getUserFromSecurityContextHolder())) {
+            throw new ResourceNotFoundException("Contact doesn't exist");
+        }
+    }
+
+    private void updateContactName(Contact contact, String name) {
+        contact.setName(name);
+    }
+
+    private void updateContactEmails(Contact contact, List<String> emails) {
+        List<Email> updatedEmails = emails.stream()
+                .map(email -> {
+                    Email existingEmail = emailRepository.findByEmailAndContact(email, contact);
+                    if (existingEmail != null) {
+                        return existingEmail;
+                    } else {
+                        return Email.builder()
+                                .email(email)
+                                .contact(contact)
+                                .build();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        contact.getEmails().clear();
+        contact.getEmails().addAll(updatedEmails);
+    }
+
+    private void updateContactPhoneNumbers(Contact contact, List<String> phoneNumbers) {
+        List<PhoneNumber> updatedPhoneNumbers = phoneNumbers.stream()
+                .map(phone -> {
+                    PhoneNumber existingPhoneNumber = phoneNumberRepository.findByPhoneNumberAndContact(phone, contact);
+                    if (existingPhoneNumber != null) {
+                        return existingPhoneNumber;
+                    } else {
+                        return PhoneNumber.builder()
+                                .phoneNumber(phone)
+                                .contact(contact)
+                                .build();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        contact.getPhones().clear();
+        contact.getPhones().addAll(updatedPhoneNumbers);
+    }
+
+    @Override
+    public void deleteContact(Long contactId) {
+        Contact existingContact = contactRepository.findById(contactId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact doesn't exist"));
+
+        validateContactOwnership(existingContact);
+
+        contactRepository.delete(existingContact);
     }
 }

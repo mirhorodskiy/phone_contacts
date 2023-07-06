@@ -30,4 +30,16 @@ public class ContactController {
         List<ContactDto> contacts = contactService.getAllContacts();
         return new ResponseEntity<>(contacts, HttpStatus.OK);
     }
+
+    @PutMapping
+    ResponseEntity<Contact> editContact(@RequestBody ContactDto contact, @RequestParam Long id) {
+        Contact editedContact = contactService.editContact(contact, id);
+        return new ResponseEntity<>(editedContact, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping
+    ResponseEntity<Void> deleteContact(@RequestParam Long id) {
+        contactService.deleteContact(id);
+        return ResponseEntity.noContent().build();
+    }
 }

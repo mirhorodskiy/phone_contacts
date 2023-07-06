@@ -3,6 +3,7 @@ package com.pet.phone_contacts.web.controller;
 import com.pet.phone_contacts.domain.model.entity.Contact;
 import com.pet.phone_contacts.web.dto.ContactDto;
 import com.pet.phone_contacts.web.service.ContactService;
+import com.pet.phone_contacts.web.service.impl.ContactExportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -17,9 +19,11 @@ import java.util.List;
 public class ContactController {
 
     private final ContactService contactService;
+    private final ContactExportService exportService;
 
-    public ContactController(ContactService contactService) {
+    public ContactController(ContactService contactService, ContactExportService exportService) {
         this.contactService = contactService;
+        this.exportService = exportService;
     }
 
     @PostMapping
@@ -59,5 +63,18 @@ public class ContactController {
         headers.setContentType(MediaType.IMAGE_JPEG);
 
         return new ResponseEntity<>(image, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportContacts() {
+        List<ContactDto> contacts = contactService.getAllContacts();
+        String csvData = exportService.generateCsvData(contacts);
+
+        byte[] fileContent = csvData.getBytes(StandardCharsets.UTF_8);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=contacts_export.csv")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(fileContent);
     }
 }

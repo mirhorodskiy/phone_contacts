@@ -11,6 +11,7 @@ import com.pet.phone_contacts.domain.repository.PhoneNumberRepository;
 import com.pet.phone_contacts.domain.repository.UserRepository;
 import com.pet.phone_contacts.web.dto.ContactDto;
 import com.pet.phone_contacts.web.service.ContactService;
+import com.pet.phone_contacts.web.util.ContactValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Validator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +32,15 @@ public class ContactServiceImpl implements ContactService {
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
     private final PhoneNumberRepository phoneNumberRepository;
+    private final ContactValidationService contactValidationService;
 
     @Autowired
-    public ContactServiceImpl(ContactRepository contactRepository, UserRepository userRepository, EmailRepository emailRepository, PhoneNumberRepository phoneNumberRepository) {
+    public ContactServiceImpl(ContactRepository contactRepository, UserRepository userRepository, EmailRepository emailRepository, PhoneNumberRepository phoneNumberRepository, Validator validator, ContactValidationService contactValidationService) {
         this.contactRepository = contactRepository;
         this.userRepository = userRepository;
         this.emailRepository = emailRepository;
         this.phoneNumberRepository = phoneNumberRepository;
+        this.contactValidationService = contactValidationService;
     }
 
     private User getUserFromSecurityContextHolder() {
@@ -73,11 +77,13 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public Contact createContact(ContactDto contactDto) {
+        contactValidationService.validateContactDto(contactDto);
         Contact contact = buildContact(contactDto);
         saveContact(contact, contactDto);
 
         return contact;
     }
+
 
     private Contact buildContact(ContactDto contactDto) {
         return Contact.builder()
@@ -118,6 +124,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public Contact editContact(ContactDto contactDto, Long contactId) {
+        contactValidationService.validateContactDto(contactDto);
         Contact existingContact = getExistingContactById(contactId);
         validateContactOwnership(existingContact);
 

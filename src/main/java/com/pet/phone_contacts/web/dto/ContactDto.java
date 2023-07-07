@@ -1,12 +1,13 @@
 package com.pet.phone_contacts.web.dto;
 
-import com.pet.phone_contacts.domain.model.entity.Email;
-import com.pet.phone_contacts.domain.model.entity.PhoneNumber;
-import com.pet.phone_contacts.domain.model.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 @Data
@@ -14,10 +15,11 @@ import java.util.List;
 @NoArgsConstructor
 public class ContactDto {
 
+    @NotBlank(message = "Name is required")
     private String name;
 
-    private List<String> emails;
+    private List<@Email(message = "Invalid email address") String> emails;
 
-    private List<String> phones;
+    private List<@Pattern(regexp = "\\+\\d{11}", message = "Invalid phone number") String> phones;
 
 }

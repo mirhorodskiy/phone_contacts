@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.security.auth.login.LoginException;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/auth")

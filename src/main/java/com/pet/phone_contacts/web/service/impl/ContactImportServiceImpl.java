@@ -42,7 +42,7 @@ public class ContactImportServiceImpl implements ContactImportService {
     }
 
     private void skipHeaderLine(BufferedReader reader) throws IOException {
-        reader.readLine(); // Пропускаємо перший рядок, що містить заголовки стовпців
+        reader.readLine();
     }
 
     private List<ContactDto> readContactsFromCsv(BufferedReader reader) throws IOException {

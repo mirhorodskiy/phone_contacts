@@ -6,6 +6,8 @@ import com.pet.phone_contacts.web.service.ContactExportService;
 import com.pet.phone_contacts.web.service.ContactImportService;
 import com.pet.phone_contacts.web.service.ContactService;
 import com.pet.phone_contacts.web.service.impl.ContactExportServiceImpl;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,7 @@ public class ContactController {
         this.contactImportService = contactImportService;
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PostMapping
     public ResponseEntity<Contact> createContact(@RequestBody ContactDto contact) {
 
@@ -42,30 +45,35 @@ public class ContactController {
         return new ResponseEntity<>(createdContact, HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @GetMapping
     public ResponseEntity<List<ContactDto>> getAllContacts() {
         List<ContactDto> contacts = contactService.getAllContacts();
         return new ResponseEntity<>(contacts, HttpStatus.OK);
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PutMapping
     ResponseEntity<Contact> editContact(@RequestBody ContactDto contact, @RequestParam Long id) {
         Contact editedContact = contactService.editContact(contact, id);
         return new ResponseEntity<>(editedContact, HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @DeleteMapping
     ResponseEntity<Void> deleteContact(@RequestParam Long id) {
         contactService.deleteContact(id);
         return ResponseEntity.noContent().build();
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PostMapping("/{contactId}/image")
     public ResponseEntity<Void> uploadContactImage(@PathVariable Long contactId, @RequestParam("image") MultipartFile image) {
         contactService.uploadContactImage(contactId, image);
         return ResponseEntity.ok().build();
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @GetMapping("/{contactId}/image")
     public ResponseEntity<byte[]> getContactImage(@PathVariable Long contactId) {
         byte[] image = contactService.getContactImage(contactId);
@@ -75,6 +83,7 @@ public class ContactController {
         return new ResponseEntity<>(image, headers, HttpStatus.OK);
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportContacts() {
         List<ContactDto> contacts = contactService.getAllContacts();
@@ -88,6 +97,7 @@ public class ContactController {
                 .body(fileContent);
     }
 
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PostMapping("/import")
     public ResponseEntity<Void> importContacts(@RequestParam("file") MultipartFile file) {
         contactImportService.importContactsFromFile(file);

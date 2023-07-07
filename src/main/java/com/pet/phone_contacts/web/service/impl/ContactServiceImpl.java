@@ -5,6 +5,7 @@ import com.pet.phone_contacts.domain.model.entity.Email;
 import com.pet.phone_contacts.domain.model.entity.PhoneNumber;
 import com.pet.phone_contacts.domain.model.entity.User;
 import com.pet.phone_contacts.domain.model.error.FileProcessingException;
+import com.pet.phone_contacts.domain.model.error.ValidationException;
 import com.pet.phone_contacts.domain.repository.ContactRepository;
 import com.pet.phone_contacts.domain.repository.EmailRepository;
 import com.pet.phone_contacts.domain.repository.PhoneNumberRepository;
@@ -86,6 +87,9 @@ public class ContactServiceImpl implements ContactService {
 
 
     private Contact buildContact(ContactDto contactDto) {
+        if (contactRepository.existsByName(contactDto.getName())) {
+            throw new ValidationException("Contact name already exists");
+        }
         return Contact.builder()
                 .name(contactDto.getName())
                 .user(getUserFromSecurityContextHolder())

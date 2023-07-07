@@ -53,9 +53,19 @@ public class ContactImportServiceImpl implements ContactImportService {
             String[] fields = line.split(",");
             String name = fields[0].trim();
             String[] emails = fields[1].trim().split(",");
-            String[] phones = Arrays.copyOfRange(fields, 2, fields.length);
 
-            ContactDto contactDto = createContactDto(name, emails, phones);
+            List<String> phones = new ArrayList<>();
+            for (int i = 2; i < fields.length; i++) {
+                String field = fields[i].trim();
+                if (field.startsWith("+")) {
+                    phones.add(field);
+                } else {
+                    emails = Arrays.copyOf(emails, emails.length + 1);
+                    emails[emails.length - 1] = field;
+                }
+            }
+
+            ContactDto contactDto = createContactDto(name, emails, phones.toArray(new String[0]));
 
             contactDtos.add(contactDto);
         }

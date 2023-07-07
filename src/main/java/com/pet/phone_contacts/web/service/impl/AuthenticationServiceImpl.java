@@ -38,7 +38,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new SighUpException("Email is already exists", HttpStatus.FORBIDDEN);
         else if (userRepository.existsByUsername(signUpDto.getUsername()))
             throw new SighUpException("Username is already exists", HttpStatus.FORBIDDEN);
-
         createUser(signUpDto);
     }
 
